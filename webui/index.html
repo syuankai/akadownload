@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 MineAI Bot 控制面板</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel h2 {
+      color: #00d9ff;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+      border-bottom: 2px solid #00d9ff;
+      padding-bottom: 10px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .status-item {
+      background: rgba(0, 217, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .status-item .label {
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .status-item .value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #00ff88;
+    }
+
+    .status-item .value.disconnected {
+      color: #ff4444;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1em;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+    }
+
+    .btn-connect {
+      background: linear-gradient(90deg, #00d9ff, #0099ff);
+      color: #000;
+    }
+
+    .btn-disconnect {
+      background: linear-gradient(90deg, #ff4444, #ff6666);
+      color: #fff;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .control-btn {
+      padding: 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 217, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .control-btn.w {
+      grid-column: 2;
+      background: rgba(0, 255, 136, 0.2);
+    }
+
+    .control-btn.a {
+      background: rgba(255, 170, 0, 0.2);
+    }
+
+    .control-btn.s {
+      background: rgba(255, 68, 68, 0.2);
+    }
+
+    .control-btn.d {
+      background: rgba(0, 170, 255, 0.2);
+    }
+
+    .chat-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-container input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1em;
+    }
+
+    .chat-container input:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+
+    .btn-send {
+      background: linear-gradient(90deg, #00ff88, #00cc66);
+      color: #000;
+    }
+
+    .log-container {
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .log-entry {
+      padding: 5px 10px;
+      margin: 2px 0;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .log-entry.info {
+      background: rgba(0, 217, 255, 0.1);
+      color: #00d9ff;
+    }
+
+    .log-entry.success {
+      background: rgba(0, 255, 136, 0.1);
+      color: #00ff88;
+    }
+
+    .log-entry.error {
+      background: rgba(255, 68, 68, 0.1);
+      color: #ff4444;
+    }
+
+    .log-entry.warning {
+      background: rgba(255, 170, 0, 0.1);
+      color: #ffaa00;
+    }
+
+    .position-display {
+      font-family: monospace;
+      font-size: 1.2em;
+      color: #00ff88;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .connected .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+
+    .disconnected .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #ff4444;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 MineAI Bot 控制面板</h1>
+
+    <!-- 連接狀態 -->
+    <div class="panel">
+      <h2>📡 連接狀態</h2>
+      <div class="status-grid">
+        <div class="status-item" id="connectionStatus">
+          <div class="label">狀態</div>
+          <div class="value disconnected" id="statusText">未連接</div>
+        </div>
+        <div class="status-item">
+          <div class="label">位置</div>
+          <div class="position-display" id="position">---</div>
+        </div>
+        <div class="status-item">
+          <div class="label">生命值</div>
+          <div class="value" id="health">---</div>
+        </div>
+        <div class="status-item">
+          <div class="label">飢餓值</div>
+          <div class="value" id="food">---</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 伺服器連接 -->
+    <div class="panel">
+      <h2>🔌 伺服器連接</h2>
+      <div class="form-group">
+        <label>伺服器位址</label>
+        <input type="text" id="serverHost" placeholder="localhost" value="localhost">
+      </div>
+      <div class="form-group">
+        <label>伺服器連接埠</label>
+        <input type="number" id="serverPort" placeholder="25565" value="25565">
+      </div>
+      <div class="form-group">
+        <label>機器人名稱</label>
+        <input type="text" id="botUsername" placeholder="MineAI_Bot" value="MineAI_Bot">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-connect" id="connectBtn">連接伺服器</button>
+        <button class="btn btn-disconnect" id="disconnectBtn" disabled>斷開連接</button>
+      </div>
+    </div>
+
+    <!-- 移動控制 -->
+    <div class="panel">
+      <h2>🎯 移動控制</h2>
+      <div class="controls-grid">
+        <button class="control-btn w" data-dir="forward">⬆️ 前</button>
+        <button class="control-btn a" data-dir="left">⬅️ 左</button>
+        <button class="control-btn s" data-dir="backward">⬇️ 後</button>
+        <button class="control-btn d" data-dir="right">➡️ 右</button>
+        <button class="control-btn" data-dir="jump">⬆️ 跳躍</button>
+        <button class="control-btn" data-dir="sneak">🦶 蹲下</button>
+        <button class="control-btn" data-dir="stop">⏹️ 停止</button>
+        <button class="control-btn" data-dir="attack">⚔️ 攻擊</button>
+        <button class="control-btn" data-dir="useItem">🖐️ 使用物品</button>
+        <button class="control-btn" data-dir="respawn">💀重生</button>
+      </div>
+    </div>
+
+    <!-- 聊天 -->
+    <div class="panel">
+      <h2>💬 聊天訊息</h2>
+      <div class="chat-container">
+        <input type="text" id="chatInput" placeholder="輸入訊息...">
+        <button class="btn btn-send" id="sendChatBtn">發送</button>
+      </div>
+    </div>
+
+    <!-- 模型設定 -->
+    <div class="panel">
+      <h2>🤖 AI 模型設定</h2>
+      <div class="form-group">
+        <label>模型提供者</label>
+        <select id="modelProvider" style="width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 1em;">
+          <option value="ollama">Ollama (本地)</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="google">Google (Gemini)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="modelApiKey" placeholder="輸入 API Key">
+      </div>
+      <div class="form-group">
+        <label>模型名稱</label>
+        <input type="text" id="modelName" placeholder="例如: llama3, gemini-pro, gpt-4o">
+      </div>
+      <div class="form-group">
+        <label>API 端點 (選填)</label>
+        <input type="text" id="modelEndpoint" placeholder="預設: http://localhost:11434">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-connect" id="saveModelBtn">儲存設定</button>
+        <button class="btn" id="testModelBtn" style="background: linear-gradient(90deg, #ffaa00, #ff8800); color: #000;">測試連線</button>
+      </div>
+      <div id="modelStatus" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
+    </div>
+
+    <!-- 日誌 -->
+    <div class="panel">
+      <h2>📝 系統日誌</h2>
+      <div class="log-container" id="logContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    
+    // DOM elements
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const serverHost = document.getElementById('serverHost');
+    const serverPort = document.getElementById('serverPort');
+    const botUsername = document.getElementById('botUsername');
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const logContainer = document.getElementById('logContainer');
+
+    // Logging function
+    function log(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${message}`;
+      logContainer.insertBefore(entry, logContainer.firstChild);
+      
+      // Keep only last 100 entries
+      while (logContainer.children.length > 100) {
+        logContainer.removeChild(logContainer.lastChild);
+      }
+    }
+
+    // Update status display
+    function updateStatus(status) {
+      const statusText = document.getElementById('statusText');
+      const connectionStatus = document.getElementById('connectionStatus');
+      const position = document.getElementById('position');
+      const health = document.getElementById('health');
+      const food = document.getElementById('food');
+
+      if (status.connected) {
+        statusText.textContent = '已連接';
+        statusText.className = 'value';
+        connectionStatus.className = 'status-item connected';
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        
+        if (status.position) {
+          position.textContent = `X: ${status.position.x} Y: ${status.position.y} Z: ${status.position.z}`;
+        }
+        health.textContent = status.health ? status.health.toFixed(1) : '---';
+        food.textContent = status.food ? status.food.toFixed(1) : '---';
+      } else {
+        statusText.textContent = '未連接';
+        statusText.className = 'value disconnected';
+        connectionStatus.className = 'status-item disconnected';
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        position.textContent = '---';
+        health.textContent = '---';
+        food.textContent = '---';
+      }
+    }
+
+    // Connect button
+    connectBtn.addEventListener('click', async () => {
+      const config = {
+        host: serverHost.value,
+        port: parseInt(serverPort.value),
+        username: botUsername.value
+      };
+      
+      log(`正在連接到 ${config.host}:${config.port}...`, 'info');
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/connect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+        const result = await res.json();
+        if (result.success) {
+          log('已發送連線請求至 Workers', 'success');
+          checkStatus();
+        } else {
+          log('連線失敗: ' + result.error, 'error');
+        }
+      } catch (err) {
+        log('連線錯誤: ' + err.message, 'error');
+      }
+    });
+
+    // Disconnect button
+    disconnectBtn.addEventListener('click', async () => {
+      log('正在斷開連接...', 'info');
+      await fetch(`${API_BASE}/api/disconnect`, { method: 'POST' });
+      updateStatus({ connected: false });
+      log('已斷開連接', 'warning');
+    });
+
+    // Check status periodically
+    async function checkStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/status`);
+        const status = await res.json();
+        updateStatus(status);
+      } catch (err) {
+        console.error('Status check failed:', err);
+      }
+    }
+    setInterval(checkStatus, 5000);
+
+    // Movement controls
+    document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+      btn.addEventListener('mousedown', async () => {
+        const dir = btn.dataset.dir;
+        await fetch(`${API_BASE}/api/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction: dir })
+        });
+        log(`執行: ${dir}`, 'info');
+      });
+      
+      btn.addEventListener('mouseup', async () => {
+        await fetch(`${API_BASE}/api/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction: 'stop' })
+        });
+      });
+      
+      btn.addEventListener('mouseleave', async () => {
+        await fetch(`${API_BASE}/api/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction: 'stop' })
+        });
+      });
+    });
+
+    // Attack button
+    document.querySelector('[data-dir="attack"]').addEventListener('click', async () => {
+      await fetch(`${API_BASE}/api/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction: 'attack' })
+      });
+      log('攻擊目標', 'info');
+    });
+
+    // Use item button
+    document.querySelector('[data-dir="useItem"]').addEventListener('click', async () => {
+      await fetch(`${API_BASE}/api/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction: 'useItem' })
+      });
+      log('使用物品', 'info');
+    });
+
+    // Respawn button
+    document.querySelector('[data-dir="respawn"]').addEventListener('click', async () => {
+      await fetch(`${API_BASE}/api/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction: 'respawn' })
+      });
+      log('重生中...', 'info');
+    });
+
+    // Chat send
+    sendChatBtn.addEventListener('click', sendChat);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChat();
+    });
+
+    async function sendChat() {
+      const message = chatInput.value.trim();
+      if (message) {
+        await fetch(`${API_BASE}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        log(`發送訊息: ${message}`, 'success');
+        chatInput.value = '';
+      }
+    }
+
+    // Initial status check
+    checkStatus();
+    log('控制面板已載入', 'info');
+
+    // Model settings
+    const modelProvider = document.getElementById('modelProvider');
+    const modelApiKey = document.getElementById('modelApiKey');
+    const modelName = document.getElementById('modelName');
+    const modelEndpoint = document.getElementById('modelEndpoint');
+    const saveModelBtn = document.getElementById('saveModelBtn');
+    const testModelBtn = document.getElementById('testModelBtn');
+    const modelStatus = document.getElementById('modelStatus');
+
+    // Load saved settings
+    const savedSettings = localStorage.getItem('modelSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      modelProvider.value = settings.provider || 'ollama';
+      modelApiKey.value = settings.apiKey || '';
+      modelName.value = settings.modelName || '';
+      modelEndpoint.value = settings.endpoint || '';
+    }
+
+    // Update endpoint placeholder based on provider
+    modelProvider.addEventListener('change', () => {
+      const endpoints = {
+        ollama: 'http://localhost:11434',
+        openrouter: 'https://openrouter.ai/api/v1',
+        google: 'https://generativelanguage.googleapis.com/v1'
+      };
+      modelEndpoint.placeholder = endpoints[modelProvider.value];
+    });
+
+    // Save model settings
+    saveModelBtn.addEventListener('click', () => {
+      const settings = {
+        provider: modelProvider.value,
+        apiKey: modelApiKey.value,
+        modelName: modelName.value,
+        endpoint: modelEndpoint.value
+      };
+      localStorage.setItem('modelSettings', JSON.stringify(settings));
+      log('模型設定已儲存', 'success');
+      modelStatus.style.display = 'block';
+      modelStatus.style.background = 'rgba(0, 255, 136, 0.1)';
+      modelStatus.style.color = '#00ff88';
+      modelStatus.textContent = '✓ 設定已儲存';
+      setTimeout(() => { modelStatus.style.display = 'none'; }, 3000);
+    });
+
+    // Test model connection
+    testModelBtn.addEventListener('click', async () => {
+      const settings = {
+        provider: modelProvider.value,
+        apiKey: modelApiKey.value,
+        modelName: modelName.value,
+        endpoint: modelEndpoint.value || modelProvider.querySelector(`option[value="${modelProvider.value}"]`).text
+      };
+
+      if (!settings.apiKey || !settings.modelName) {
+        log('請填寫 API Key 和模型名稱', 'error');
+        return;
+      }
+
+      log('正在測試模型連線...', 'info');
+      modelStatus.style.display = 'block';
+      modelStatus.style.background = 'rgba(255, 170, 0, 0.1)';
+      modelStatus.style.color = '#ffaa00';
+      modelStatus.textContent = '🔄 測試中...';
+
+      try {
+        const response = await fetch('/api/test-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          log('模型連線測試成功!', 'success');
+          modelStatus.style.background = 'rgba(0, 255, 136, 0.1)';
+          modelStatus.style.color = '#00ff88';
+          modelStatus.textContent = '✓ 連線成功: ' + result.response.substring(0, 100) + '...';
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (err) {
+        log('模型連線測試失敗: ' + err.message, 'error');
+        modelStatus.style.background = 'rgba(255, 68, 68, 0.1)';
+        modelStatus.style.color = '#ff4444';
+        modelStatus.textContent = '✗ 連線失敗: ' + err.message;
+      }
+    });
+
+    log('控制面板已載入', 'info');
+  </script>
+</body>
+</html>
