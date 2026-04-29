@@ -1,11 +1,15 @@
 {
   "name": "mineaibot",
   "version": "1.0.0",
-  "description": "Minecraft AI Bot - Cloudflare Workers Edition",
-  "main": "worker.js",
+  "description": "Minecraft AI Bot - Cloudflare Workers + Local Bot",
+  "main": "bot.js",
   "scripts": {
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev"
+    "dev": "wrangler dev",
+    "bot": "node bot.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.17.0"
   },
   "devDependencies": {
     "wrangler": "^3.28.0"
