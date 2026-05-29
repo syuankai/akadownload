@@ -1,6 +1,0 @@
-name = "mineaibot"
-main = "worker.js"
-compatibility_date = "2024-04-29"
-
-[site]
-bucket = "./webui"
